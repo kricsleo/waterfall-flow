@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts">
-import { Vue } from "vue-property-decorator";
+import Vue from "vue";
 import KWaterfall from "./components/KWaterfall/index.vue";
 import Item from "./components/Item.vue";
 import ItemTitle from "./components/ItemTitle.vue";

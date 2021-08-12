@@ -124,7 +124,7 @@ export function createHolderNode(targetNode: Element): HTMLDivElement {
     return;
   }
   const holderNode = document.createElement("div");
-  holderNode.style.height = 0;
+  holderNode.style.height = "0";
   holderNode.style.overflow = "auto";
   targetNode.appendChild(holderNode);
   return holderNode;
