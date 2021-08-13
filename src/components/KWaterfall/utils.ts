@@ -1,7 +1,7 @@
 import { Vue } from "vue/types/vue";
 
 export interface IItem {
-  id: string;
+  key: any;
   [x: string]: any;
 }
 
@@ -13,7 +13,6 @@ export interface IPoolItem {
   data: IItem;
   vm?: Vue;
   height?: number;
-  columnIdx?: number;
 }
 
 /** 检查数据类型 */
@@ -67,41 +66,44 @@ export function checkType<
   return sourceType === type;
 }
 
+/** 生成指定长度数组 */
+export function getArray<T>(length: number, factory?: T): Array<T extends (index?: number) => infer U ? U : T> {
+  const arr = Array(length).fill(undefined);
+  return factory
+    ? arr.map((t, i) => (checkType(factory, "Function") ? factory(i) : factory))
+    : arr;
+}
+
 /** 生成初始默认columns */
 export function getDefaultColumns(cols: number): IColumn[] {
-  return new Array(cols).fill(null).map(() => ({ height: 0 }));
+  return getArray(cols, () => ({ height: 0 }));
 }
 
 /** list 数据diff， 每项的key与视图强关联，key 不同则意味着可能渲染出不同高度 item */
 export function diffSea(
   sea: IPoolItem[] = [],
   list: IItem[] = [],
-  key = "id"
+  key = "key"
 ): {
   clear: boolean;
   pool: IPoolItem[];
 } {
   const pool = list.map(data => ({ data }));
   if (!sea.length || sea.length > list.length) {
-    return {
-      clear: true,
-      pool
-    };
+    return { clear: true, pool };
   }
   // 为了性能不做深比较，只判断key(使用时确保key变化则意味着视图变化)是否一致
   let splitIdx = 0;
-  while (sea[splitIdx] && sea[splitIdx].data[key] === list[splitIdx][key]) {
+  while (
+    sea[splitIdx] &&
+    sea[splitIdx].data[key] !== undefined &&
+    sea[splitIdx].data[key] === list[splitIdx][key]
+  ) {
     splitIdx += 1;
   }
   return splitIdx === sea.length
-    ? {
-        clear: false,
-        pool: pool.slice(splitIdx)
-      }
-    : {
-        clear: true,
-        pool
-      };
+    ? { clear: false, pool: pool.slice(splitIdx) }
+    : { clear: true, pool };
 }
 
 /** 插入节点到 fragment 中 */
@@ -118,29 +120,18 @@ export function attachNodesToFragment(
   return frag;
 }
 
-/** 创建并插入占位元素 */
-export function createHolderNode(targetNode: Element): HTMLDivElement {
-  if (!targetNode) {
-    return;
-  }
-  const holderNode = document.createElement("div");
-  holderNode.style.height = "0";
-  holderNode.style.overflow = "auto";
-  targetNode.appendChild(holderNode);
-  return holderNode;
-}
-
 /** 高度排版 */
-export function arrange(columns: IColumn[], pool: IPoolItem[]): void {
+export function arrange(columns: IColumn[], pool: IPoolItem[]): IPoolItem[][] {
   const heights = columns.map(t => t.height);
   const findShortestIdx = (arr: number[]) => {
     let idx = 0;
     arr.forEach((t, i) => t < arr[idx] && (idx = i));
     return idx;
   };
-  pool.forEach(t => {
+  return pool.reduce((all, cur) => {
     const shortestIdx = findShortestIdx(heights);
-    heights[shortestIdx] += t.height || 0;
-    t.columnIdx = shortestIdx;
-  });
+    heights[shortestIdx] += cur.height || 0;
+    all[shortestIdx].push(cur);
+    return all;
+  }, getArray(columns.length, Array as () => IPoolItem[]));
 }

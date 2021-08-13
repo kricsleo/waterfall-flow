@@ -6,12 +6,12 @@
 
 <script lang="ts">
 import Vue, { PropType } from "vue";
-import { IItem } from "./KWaterfall/utils";
+import { IItemData } from "../utils/mock";
 
 export default Vue.extend({
   props: {
     item: {
-      type: Object as PropType<IItem>,
+      type: Object as PropType<IItemData>,
       required: true,
       default: () => ({})
     }
