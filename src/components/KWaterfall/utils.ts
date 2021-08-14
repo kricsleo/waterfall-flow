@@ -5,14 +5,20 @@ export interface IItem {
   [x: string]: any;
 }
 
+export enum ENUM_HOOK {
+  hookBeforeItemArrange = 'hookBeforeItemArrange',
+  hookAfterItemArrange = 'hookAfterItemArrange'
+}
+
 export interface IColumn {
   height: number;
 }
 
 export interface IPoolItem {
   data: IItem;
-  vm?: Vue;
+  vm?: Vue & { $el: HTMLDivElement };
   height?: number;
+  columnIdx?: number;
 }
 
 /** 检查数据类型 */
@@ -69,14 +75,9 @@ export function checkType<
 /** 生成指定长度数组 */
 export function getArray<T>(length: number, factory?: T): Array<T extends (index?: number) => infer U ? U : T> {
   const arr = Array(length).fill(undefined);
-  return factory
+  return factory !== undefined
     ? arr.map((t, i) => (checkType(factory, "Function") ? factory(i) : factory))
     : arr;
-}
-
-/** 生成初始默认columns */
-export function getDefaultColumns(cols: number): IColumn[] {
-  return getArray(cols, () => ({ height: 0 }));
 }
 
 /** list 数据diff， 每项的key与视图强关联，key 不同则意味着可能渲染出不同高度 item */
@@ -121,17 +122,16 @@ export function attachNodesToFragment(
 }
 
 /** 高度排版 */
-export function arrange(columns: IColumn[], pool: IPoolItem[]): IPoolItem[][] {
-  const heights = columns.map(t => t.height);
+export function arrange(pool: IPoolItem[], colHeights: number[]): IPoolItem[][] {
   const findShortestIdx = (arr: number[]) => {
     let idx = 0;
     arr.forEach((t, i) => t < arr[idx] && (idx = i));
     return idx;
   };
   return pool.reduce((all, cur) => {
-    const shortestIdx = findShortestIdx(heights);
-    heights[shortestIdx] += cur.height || 0;
+    const shortestIdx = findShortestIdx(colHeights);
+    colHeights[shortestIdx] += cur.height || 0;
     all[shortestIdx].push(cur);
     return all;
-  }, getArray(columns.length, Array as () => IPoolItem[]));
+  }, getArray(colHeights.length, () => [] as IPoolItem[]));
 }

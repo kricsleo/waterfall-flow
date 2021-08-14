@@ -26,8 +26,7 @@ export default Vue.extend({
     }
   },
   beforeCreate() {
-    // this.limitLog("beforeCreate");
-    // console.log("beforeCreate", this);
+    console.log("beforeCreate");
   },
   created() {
     this.limitLog("created");

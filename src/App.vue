@@ -1,18 +1,35 @@
 <template>
   <div id="app">
     <div class="opt">
-      cols:{{cols}}
-      <input type="range" placeholder="cols" :min="1" :max="8" :value="cols" @input="cols = Number($event.target.value)" />
-      waitting for img
-      <input type="checkbox" :checked="async" @input="async = $event.target.checked" />
+      cols:
+      <input type="range" placeholder="cols" :min="1" :max="8" :value="cols" @input="cols = Number($event.target.value)" /> {{cols}}
+      <br />
+      waitting mode:
+      <input type="checkbox" :checked="asyncMode === 'none'" @input="asyncMode = 'none'" /> none
+      <input type="checkbox" :checked="asyncMode === 'oneByOne'" @input="asyncMode = 'oneByOne'" /> one by one
+      <input type="checkbox" :checked="asyncMode === 'batch'" @input="asyncMode = 'batch'" /> batch
+      <br />
+      hook:
+      <input type="checkbox" :checked="usingHook" @input="usingHook = $event.target.checked" />
       <br />
       <button @click="reload">reload</button>
-      <button @click="loadMore">loadMore</button>
+      <button @click="loadMore">load more</button>
+      <br />
+      <button @click="rearrangeLastPool">rearrange last inserted</button>
+      <button @click="rearrangeAll">rearrange all</button>
+      <br />
       <button @click="reverseComp">change render component</button>
     </div>
     <div class="content">
-      <KWaterfall class="waterfall" :cols="cols" :list="list" :item="items[0]" />
-      <KWaterfall class="waterfall" :cols="cols" :list="list" :item="items[1]" />
+      <KWaterfall
+        ref="waterfall"
+        class="waterfall"
+        :cols="cols"
+        :list="list"
+        :item="items[0]"
+        :hookBeforeItemArrange="usingHook ? hookBeforeItemArrange : null"
+        :hookAfterItemArrange="usingHook ? hookAfterItemArrange : null"
+        />
     </div>
   </div>
 </template>
@@ -24,6 +41,7 @@ import Item from "./components/Item.vue";
 import ItemTitle from "./components/ItemTitle.vue";
 import { loadItems } from "./utils/mock";
 import { loadImg } from "./utils";
+import { IPoolItem } from "./components/KWaterfall/utils";
 
 export default Vue.extend({
   components: {
@@ -34,7 +52,9 @@ export default Vue.extend({
       items: [Item, ItemTitle],
       list: [],
       cols: 4,
-      async: true
+      asyncMode: 'none',
+      rearrangeDeps: 0,
+      usingHook: false
     };
   },
   mounted() {
@@ -46,7 +66,12 @@ export default Vue.extend({
       this.loadMore()
     },
     loadMore() {
-      this.async ? this.loadMoreAsync() : this.loadMoreSync();
+      switch(this.asyncMode) {
+        case 'none': return this.loadMoreSync();
+        case 'oneByOne': return this.loadMoreAsyncOneByOne();
+        case 'batch': return this.loadMoreAsyncBatch();
+        default: return;
+      }
     },
     // 非等待方式
     async loadMoreSync() {
@@ -56,8 +81,34 @@ export default Vue.extend({
         title: `${i}-${t.title}`
       }));
     },
-    // 先等待图片加载拿到宽度来使得组件再mount时即为最终布局
-    async loadMoreAsync() {
+    // 逐个等待图片加载拿到宽度来使得组件再mount时即为最终布局
+    async loadMoreAsyncOneByOne() {
+      let newItems = await loadItems();
+      const waitPrevs = (i, cb) => {
+        if(newItems.slice(0, i - 1).some(t => t.imgWidth === undefined)) {
+          setTimeout(() => waitPrevs(i, cb), 20);
+        } else {
+          cb();
+        }
+      };
+      const pushItem = item => {
+        this.list = [...this.list, item].map((t, i) => ({
+          ...t,
+          title: `${i}-${t.title}`
+        }));
+      };
+      newItems.forEach((t, i) =>
+        loadImg(t.url).then(k => {
+          t.imgWidth = k.width;
+          t.imgHeight = k.height;
+        }).catch(() => {
+          t.imgWidth = 0;
+          t.imgHeight = 0;
+        }).finally(() => waitPrevs(i, () => pushItem(t)))
+      );
+    },
+    // 批量等待图片加载拿到宽度来使得组件再mount时即为最终布局
+    async loadMoreAsyncBatch() {
       let newItems = await loadItems();
       newItems = await Promise.all(newItems.map(
         t => loadImg(t.url).then(k => ({ ...t, imgWidth: k.width, imgHeight: k.height })).catch(() => t))
@@ -69,6 +120,38 @@ export default Vue.extend({
     },
     reverseComp() {
       this.items.reverse();
+    },
+    rearrangeLastPool() {
+      this.$refs.waterfall?.rearrangeLastPool();
+    },
+    rearrangeAll() {
+      this.$refs.waterfall?.rearrangeAll();
+    },
+    hookBeforeItemArrange(item: IPoolItem) {
+      const el = item.vm.$el;
+      const { top: prevTop, left: prevLeft } = el.getBoundingClientRect();
+      console.log('top', prevTop, prevLeft)
+      el.dataset.prevTop = String(prevTop);
+      el.dataset.prevLeft = String(prevLeft);
+    },
+    hookAfterItemArrange(item: IPoolItem) {
+      const el = item.vm.$el;
+      const { left, top } = el.getBoundingClientRect();
+       // Invert
+      const deltX = Number(el.dataset.prevLeft) - left;
+      const deltY = Number(el.dataset.prevTop) - top;
+      const transformStyle = `translate(${deltX}px, ${deltY}px)`;
+      el.style.transform = transformStyle;
+      el.style.transformOrigin = 'left top';
+      console.log('calling', transformStyle)
+      requestAnimationFrame(() => {
+        el.classList.add('tansition-flip');
+        el.style.transform = '';
+        el.addEventListener('transitionend', () => {
+          el.classList.remove('tansition-flip');
+          el.style.transformOrigin = '';
+        }, { once: true });
+      })
     }
   }
 });
@@ -98,9 +181,11 @@ body {
     justify-content: space-between;
   }
   .waterfall {
-    width: 45%;
     padding: 20px;
   }
+}
+.tansition-flip {
+  transition: transform 1s ease-in-out;
 }
 .k-waterfall__column {
   & + & {

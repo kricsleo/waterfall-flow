@@ -1,7 +1,7 @@
 <template>
   <div ref='k-waterfall' class='k-waterfall' v-bind="$attrs" v-on="$listeners">
     <div
-      v-for='(column, idx) in columns'
+      v-for='(t, idx) in Array(cols).fill(null)'
       ref='k-waterfall__column'
       :key='idx'
       class='k-waterfall__column'
@@ -15,10 +15,11 @@ import {
   attachNodesToFragment,
   arrange,
   IPoolItem,
-  getDefaultColumns,
   diffSea,
   IItem,
-  checkType
+  checkType,
+  getArray,
+  ENUM_HOOK
 } from './utils';
 
 /**
@@ -57,32 +58,39 @@ export default Vue.extend({
       type: [Object, Function],
       required: true,
       default: () => ({})
+    },
+    hookBeforeItemArrange: {
+      type: Function,
+      required: false
+    },
+    hookAfterItemArrange: {
+      type: Function,
+      required: false
     }
   },
   data() {
     return {
-      columns: getDefaultColumns(this.cols),
       pool: [] as IPoolItem[],
       sea: [] as IPoolItem[],
+      lastPool: [] as IPoolItem[],
       isMounted: false
     };
   },
   watch: {
     cols() {
-      this.columns = getDefaultColumns(this.cols);
       this.$nextTick(() => this.rearrangeAll());
     },
     item() {
-      this.reset();
+      this.destroyAll();
       this.$nextTick(() => {
-        this.pool = this.list.map(t => ({ data: t}));
+        this.pool = this.list.map(t => ({ data: t }));
         this.mountPool();
       });
     },
     list() {
       // diff 新旧数据，避免历史数据的重复排版
       const { clear, pool } = diffSea(this.sea, this.list);
-      clear && (this.pool.length || this.sea.length) && this.reset();
+      clear && (this.pool.length || this.sea.length) && this.destroyAll();
       this.pool = pool;
       this.isMounted && this.mountPool();
     }
@@ -91,61 +99,83 @@ export default Vue.extend({
     this.isMounted = true;
     this.mountPool();
   },
+  beforeDestroy() {
+    this.destroyAll();
+  },
   methods: {
-    // 创建子节点实例，但是不自动挂载到页面上
+    // 批量创建子节点实例，但是不自动挂载到页面上
     createPoolItems() {
       const ItemCos: VueConstructor = checkType(this.item, 'Function')
         ? this.item
         : Vue.extend(this.item);
-      console.log('this.pool', this.pool)
       this.pool.forEach(t => (t.vm = new ItemCos({ propsData: { item: t.data } }).$mount()));
     },
-    // 挂载子节点到隐藏容器中来提前计算出子节点高度
+    // 批量挂载子节点到第一列中来在 mounted 阶段计算出子节点高度
     moveItemsToHolderColumn(items: IPoolItem[]) {
-      const holderColumn = (this.$refs['k-waterfall__column'] as HTMLDivElement[])[0]
-      const frag = attachNodesToFragment(items.map(t => t.vm.$el));
+      const columnIdx = 0;
+      const holderColumn = this.getColumns()[columnIdx];
+      // 已经处于指定列的元素不进行移动
+      const frag = attachNodesToFragment(items.filter(t => t.columnIdx !== columnIdx).map(t => t.vm.$el));
       holderColumn.appendChild(frag);
+      items.forEach(t => t.height = t.vm.$el.offsetHeight);
     },
-    // 移动子节点到列中
-    moveItemsToColumns(items: IPoolItem[]) {
-      items.forEach(t => t.height = (t.vm.$el as HTMLElement)?.offsetHeight);
-      // 高度排版找到每个子节点归属的列
-      const groups = arrange(this.columns, items);
-      const columnNodes = this.$refs['k-waterfall__column'] as HTMLDivElement[];
+    // 批量移动子节点到归属列中
+    moveItemsToColumns(items: IPoolItem[], colHeights: number[]) {
+      const groups = arrange(items, colHeights);
+      const columnNodes = this.getColumns();
       groups.forEach((t, i) =>
-        columnNodes[i].appendChild(attachNodesToFragment(t.map(k => k.vm.$el)))
+        columnNodes[i].appendChild(attachNodesToFragment(t.map(k => {
+          // 记录子节点被分配的列的索引值，后续重排时便于性能优化
+          k.columnIdx = i;
+          return k.vm.$el;
+        })))
       );
+      this.hook(items, ENUM_HOOK.hookAfterItemArrange);
     },
+    // 批量排版鱼池中的新数据
     mountPool() {
       if (!this.pool.length) {
         return;
       }
-      // 计算当前每个column的高度
-      this.$refs['k-waterfall__column'].forEach(
-        (t: HTMLDivElement, idx) => (this.columns[idx].height = t.offsetHeight)
-      );
+      const colHeights = this.getColumns().map(t => t.offsetHeight);
       this.createPoolItems();
+      this.hook(this.pool, ENUM_HOOK.hookBeforeItemArrange);
       this.moveItemsToHolderColumn(this.pool);
-      this.moveItemsToColumns(this.pool);
+      this.moveItemsToColumns(this.pool, colHeights);
       // 记录已排版数据，并清空鱼池
+      this.lastPool = [...this.pool];
       this.sea.push(...this.pool);
       this.pool = [];
     },
+    // 全部重排
+    rearrangeAll() {
+      this.hook(this.sea, ENUM_HOOK.hookBeforeItemArrange);
+      this.moveItemsToHolderColumn(this.sea);
+      this.moveItemsToColumns(this.sea, getArray(this.cols, 0));
+    },
+    // 重排最后一次的鱼池
+    rearrangeLastPool() {
+      this.lastPool.forEach(t => t.height = t.vm.$el.offsetHeight);
+      this.hook(this.lastPool, ENUM_HOOK.hookBeforeItemArrange);
+      attachNodesToFragment(this.lastPool.map(t => t.vm.$el));
+      this.moveItemsToColumns(this.lastPool, this.getColumns().map(t => t.offsetHeight));
+    },
     // 重置所有数据
-    reset() {
-      this.columns = getDefaultColumns(this.cols);
+    destroyAll() {
       this.pool = [];
+      this.lastPool = [];
       this.sea.forEach(t => {
         t.vm.$destroy();
         t.vm.$el?.parentNode.removeChild(t.vm.$el);
       });
       this.sea = [];
     },
-    // 所有子节点重新排布
-    rearrangeAll() {
-      this.moveItemsToHolderColumn(this.sea);
-      this.moveItemsToColumns(this.sea);
+    getColumns(): HTMLDivElement[] {
+      return this.$refs['k-waterfall__column'] || [];
     },
+    hook(items: IPoolItem[], hook: ENUM_HOOK) {
+      items.forEach(t => this[hook]?.(t));
+    }
   }
 });
 </script>
