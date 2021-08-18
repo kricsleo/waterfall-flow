@@ -22,8 +22,10 @@
 | cols | number | 2 | 列数 |
 | list | Array<{<br/>  key: any;  <br />  [x: string]: any;<br/>}> | [] | 列表型数据<br />(数据最好包含key字段作为唯一索引, 在list更新的时候默认会根据key来做diff,减少不必要的重渲染; 在没有key的情况下每次更新list都会重渲染所有元素, 性能下降) |
 | item | object \| VueConstructor | {} | 待渲染组件<br />(vue文件导出的对象或者vue.extend导出的vue构造函数) |
+| prop-key | string | 'key' | list数据中用来做diff的属性名 |
+| prop-inject | string | 'item' | 数据注入到子组件时的属性名 |
 
-出于「having some fun!」的目的, 计划加入更多的hook, 可以切入瀑布流工作的各个阶段, 目前已经提供有如下(更新进度请查看`ENUM_HOOK`枚举值)
+出于「Let's have fun!」的目的, 计划加入更多的hook, 可以切入瀑布流工作的各个阶段, 目前已经提供有如下(更新进度请查看`ENUM_HOOK`枚举值)
 
 - `hookBeforeItemArrange`: 元素即将被排版时触发
 - `hookAfterItemArrange`:元素排版完成后触发

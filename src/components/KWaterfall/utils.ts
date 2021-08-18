@@ -10,6 +10,11 @@ export enum ENUM_HOOK {
   hookAfterItemArrange = 'hookAfterItemArrange'
 }
 
+export enum ENUM_DIRECTION {
+  horizontal = 'horizontal',
+  vertical = 'vertical'
+}
+
 export interface IColumn {
   height: number;
 }
@@ -122,16 +127,16 @@ export function attachNodesToFragment(
 }
 
 /** 高度排版 */
-export function arrange(pool: IPoolItem[], colHeights: number[]): IPoolItem[][] {
+export function arrange(pool: IPoolItem[], measurements: number[]): IPoolItem[][] {
   const findShortestIdx = (arr: number[]) => {
     let idx = 0;
     arr.forEach((t, i) => t < arr[idx] && (idx = i));
     return idx;
   };
   return pool.reduce((all, cur) => {
-    const shortestIdx = findShortestIdx(colHeights);
-    colHeights[shortestIdx] += cur.height || 0;
+    const shortestIdx = findShortestIdx(measurements);
+    measurements[shortestIdx] += cur.height || 0;
     all[shortestIdx].push(cur);
     return all;
-  }, getArray(colHeights.length, () => [] as IPoolItem[]));
+  }, getArray(measurements.length, () => [] as IPoolItem[]));
 }

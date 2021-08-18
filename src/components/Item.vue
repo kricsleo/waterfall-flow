@@ -3,15 +3,20 @@
     <div class="item__img-wrapper" :style="{ paddingTop: `${imgRatio * 100}%` }">
       <img :class="['item__img', { 'item__img--absolute': imgRatio }]" :src="item.url" />
     </div>
-    <p class="item__title">{{ item.title }}</p>
+    <item-footer :item="item" />
   </div>
 </template>
 
 <script lang="ts">
 import Vue, { PropType } from "vue";
+import ItemFooter from './ItemFooter.vue'
 import { IItemData } from "../utils/mock";
 
 export default Vue.extend({
+  name: 'item',
+  components: {
+    ItemFooter
+  },
   props: {
     item: {
       type: Object as PropType<IItemData>,
@@ -61,7 +66,7 @@ export default Vue.extend({
 .item {
   border-radius: 4px;
   box-shadow: 0 1px 3px rgb(0 0 0 / 2%), 0 4px 8px rgb(0 0 0 / 2%);
-  background-color: #fff;
+  background-color: #FFF;
   font-size: 0;
   overflow: hidden;
   & + & {
@@ -86,7 +91,7 @@ export default Vue.extend({
     font-size: 14px;
     line-height: 16px;
     font-weight: 700;
-    color: #020403;
+    color: #fff;
   }
 }
 </style>

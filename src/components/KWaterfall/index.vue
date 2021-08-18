@@ -19,7 +19,8 @@ import {
   IItem,
   checkType,
   getArray,
-  ENUM_HOOK
+  ENUM_HOOK,
+  ENUM_DIRECTION
 } from './utils';
 
 /**
@@ -30,6 +31,9 @@ import {
 export default Vue.extend({
   name: 'k-waterfall',
   inheritAttrs: false,
+  provide() {
+    return {'k-waterfall': this};
+  },
   props: {
     list: {
       type: Array as PropType<IItem[]>,
@@ -58,6 +62,16 @@ export default Vue.extend({
       type: [Object, Function],
       required: true,
       default: () => ({})
+    },
+    propKey: {
+      type: String,
+      required: false,
+      default: 'key'
+    },
+    propInject: {
+      type: String,
+      required: false,
+      default: 'item'
     },
     hookBeforeItemArrange: {
       type: Function,
@@ -89,7 +103,7 @@ export default Vue.extend({
     },
     list() {
       // diff 新旧数据，避免历史数据的重复排版
-      const { clear, pool } = diffSea(this.sea, this.list);
+      const { clear, pool } = diffSea(this.sea, this.list, this.propKey);
       clear && (this.pool.length || this.sea.length) && this.destroyAll();
       this.pool = pool;
       this.isMounted && this.mountPool();
@@ -108,7 +122,7 @@ export default Vue.extend({
       const ItemCos: VueConstructor = checkType(this.item, 'Function')
         ? this.item
         : Vue.extend(this.item);
-      this.pool.forEach(t => (t.vm = new ItemCos({ propsData: { item: t.data } }).$mount()));
+      this.pool.forEach(t => (t.vm = new ItemCos({ propsData: { [this.propInject]: t.data } }).$mount()));
     },
     // 批量挂载子节点到第一列中来在 mounted 阶段计算出子节点高度
     moveItemsToHolderColumn(items: IPoolItem[]) {
@@ -117,11 +131,11 @@ export default Vue.extend({
       // 已经处于指定列的元素不进行移动
       const frag = attachNodesToFragment(items.filter(t => t.columnIdx !== columnIdx).map(t => t.vm.$el));
       holderColumn.appendChild(frag);
-      items.forEach(t => t.height = t.vm.$el.offsetHeight);
+      items.forEach(t => t.height = this.measureElement(t.vm.$el));
     },
     // 批量移动子节点到归属列中
-    moveItemsToColumns(items: IPoolItem[], colHeights: number[]) {
-      const groups = arrange(items, colHeights);
+    moveItemsToColumns(items: IPoolItem[], measurements: number[]) {
+      const groups = arrange(items, measurements);
       const columnNodes = this.getColumns();
       groups.forEach((t, i) =>
         columnNodes[i].appendChild(attachNodesToFragment(t.map(k => {
@@ -137,11 +151,11 @@ export default Vue.extend({
       if (!this.pool.length) {
         return;
       }
-      const colHeights = this.getColumns().map(t => t.offsetHeight);
+      const measurements = this.getColumns().map(t => this.measureElement(t));
       this.createPoolItems();
       this.hook(this.pool, ENUM_HOOK.hookBeforeItemArrange);
       this.moveItemsToHolderColumn(this.pool);
-      this.moveItemsToColumns(this.pool, colHeights);
+      this.moveItemsToColumns(this.pool, measurements);
       // 记录已排版数据，并清空鱼池
       this.lastPool = [...this.pool];
       this.sea.push(...this.pool);
@@ -155,10 +169,10 @@ export default Vue.extend({
     },
     // 重排最后一次的鱼池
     rearrangeLastPool() {
-      this.lastPool.forEach(t => t.height = t.vm.$el.offsetHeight);
+      this.lastPool.forEach(t => t.height = this.measureElement(t.vm.$el));
       this.hook(this.lastPool, ENUM_HOOK.hookBeforeItemArrange);
       attachNodesToFragment(this.lastPool.map(t => t.vm.$el));
-      this.moveItemsToColumns(this.lastPool, this.getColumns().map(t => t.offsetHeight));
+      this.moveItemsToColumns(this.lastPool, this.getColumns().map(t => this.measureElement(t)));
     },
     // 重置所有数据
     destroyAll() {
@@ -175,6 +189,9 @@ export default Vue.extend({
     },
     hook(items: IPoolItem[], hook: ENUM_HOOK) {
       items.forEach(t => this[hook]?.(t));
+    },
+    measureElement(el: HTMLElement, direction: ENUM_DIRECTION = ENUM_DIRECTION.vertical): number {
+      return el ? el[direction === ENUM_DIRECTION.vertical ? 'offsetHeight' : 'offsetWidth'] : 0;
     }
   }
 });
@@ -185,9 +202,9 @@ export default Vue.extend({
   display: flex;
   align-items: flex-start;
   &__column {
-    flex: 1 1 0;
-    display: flex;
-    flex-direction: column;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
   }
 }
 </style>
