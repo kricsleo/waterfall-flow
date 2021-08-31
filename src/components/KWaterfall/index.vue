@@ -38,12 +38,6 @@ export default Vue.extend({
     list: {
       type: Array as PropType<IItem[]>,
       required: true,
-      validator: (list: IItem[]) => {
-        list.forEach(
-          t => t.key === undefined && console.warn('missing prop [key], this may cause unnecessary render',t)
-        );
-        return true;
-      },
       default: () => [] as PropType<IItem[]>
     },
     cols: {

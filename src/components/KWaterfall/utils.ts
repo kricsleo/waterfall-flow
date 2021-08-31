@@ -99,6 +99,13 @@ export function diffSea(
     return { clear: true, pool };
   }
   // 为了性能不做深比较，只判断key(使用时确保key变化则意味着视图变化)是否一致
+  list.some(t => {
+    if(t[key] === undefined) {
+      console.warn(`missing prop [${key}], this may cause unnecessary render`, t);
+      return true;
+    }
+    return false;
+  });
   let splitIdx = 0;
   while (
     sea[splitIdx] &&
@@ -119,7 +126,7 @@ export function attachNodesToFragment(
 ): DocumentFragment {
   const frag = fragment || document.createDocumentFragment();
   if (checkType(node, "Array")) {
-    node.forEach(el => frag.appendChild(el));
+    node.forEach(el => el && frag.appendChild(el));
   } else {
     frag.appendChild(node);
   }
