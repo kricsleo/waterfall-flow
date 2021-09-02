@@ -185,7 +185,7 @@ export default Vue.extend({
       items.forEach(t => this[hook]?.(t));
     },
     measureElement(el: HTMLElement, direction: ENUM_DIRECTION = ENUM_DIRECTION.vertical): number {
-      return el ? el[direction === ENUM_DIRECTION.vertical ? 'offsetHeight' : 'offsetWidth'] : 0;
+      return el ? el.getBoundingClientRect()[direction === ENUM_DIRECTION.vertical ? 'height' : 'width']: 0;
     }
   }
 });
@@ -195,6 +195,7 @@ export default Vue.extend({
 .k-waterfall {
   display: flex;
   align-items: flex-start;
+  justify-content: space-between;
   &__column {
     flex-grow: 1;
     flex-shrink: 1;
