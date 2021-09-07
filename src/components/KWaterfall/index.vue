@@ -26,21 +26,14 @@ export default Vue.extend({
       default: () => ({})
     }
   },
-  data() {
-    // @ts-ignore
-    this.itemEls = [];
-    return {} as {itemEls: HTMLElement[]};
-  },
-  methods: {
-    getLanes(): HTMLElement[] {
-      return (this.$refs[laneClass] || []).map(t => t.$el || t);
-    }
-  },
   render(h): VNode {
     const { $scopedSlots, list, cols, transitionProps } = this;
     const layoutItems: HTMLElement[] = [];
     let toProcessCount = 0;
     const laneCommonProps = { class: laneClass, ref: laneClass, refInFor: true };
+
+    const getLanes = (): HTMLElement[] => (this.$refs[laneClass] || []).map(t => t.$el || t);
+
     const holderLane = h(
       'transition-group',
       {
@@ -53,10 +46,11 @@ export default Vue.extend({
           // batch layout in the end
           enter: (el) => {
             layoutItems.push(el);
-            layoutItems.length === toProcessCount && layoutEls(layoutItems, this.getLanes())
+            layoutItems.length === toProcessCount && layoutEls(layoutItems, getLanes())
           }
         }
-    }, list.map((item, index) => $scopedSlots.default({item, index})));
+    }, list.map((item, index) =>  $scopedSlots.default({item, index})));
+
     return h(
       'div',
       // let the 'cols' be the default key,
