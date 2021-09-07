@@ -1,4 +1,4 @@
-import { getArray } from "@/components/KWaterfall/utils";
+import { getArray } from "@/components/KWaterfall/helpers";
 import { wait } from "./index";
 
 export interface IItemData {
@@ -35,4 +35,15 @@ export async function loadItems(count = 10): Promise<IItemData[]> {
     return { key, url, title, avatar, username };
   });
   return items;
+}
+
+export function shuffle<T>(arr: T[]): T[] {
+  const copy = [...arr];
+  for (let i = copy.length-1; i >=0; i--) {
+    const randomIndex = Math.floor(Math.random()*(i+1));
+    const itemAtIndex = copy[randomIndex];
+    copy[randomIndex] = copy[i];
+    copy[i] = itemAtIndex;
+  }
+  return copy;
 }

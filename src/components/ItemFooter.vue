@@ -31,6 +31,7 @@ export default Vue.extend({
   },
   mounted() {
     this.limitLog("mounted");
+    // console.log('item this.$router', this.$router);
   },
   beforeUpdate() {
     this.limitLog("beforeUpdate");
@@ -45,7 +46,7 @@ export default Vue.extend({
     this.limitLog("destroyed");
   },
   methods: {
-    limitLog(msg: any) {
+    limitLog(msg: string) {
       console.log(msg);
     }
   }
@@ -60,6 +61,7 @@ export default Vue.extend({
   font-size: 0;
   overflow: hidden;
   padding: 10px;
+  margin: 0 10px;
   & + & {
     margin-top: 10px;
   }

@@ -20,7 +20,8 @@
   "author": "kricsleo",
   "license": "MIT",
   "dependencies": {
-    "vue": "^2.6.11"
+    "vue": "^2.6.11",
+    "vue-router": "^3.5.2"
   },
   "peerDependencies": {
     "tslib": "2.3.1"

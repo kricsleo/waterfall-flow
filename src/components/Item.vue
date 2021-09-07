@@ -55,20 +55,26 @@ export default Vue.extend({
     this.limitLog("destroyed");
   },
   methods: {
-    limitLog(msg: any) {
-      console.log(msg);
+    limitLog(msg: string) {
+      console.count(msg);
     }
   }
 });
 </script>
 
 <style scoped lang="scss">
+.item::v-deep {
+  .item-footer {
+    margin: 0;
+  }
+}
 .item {
   border-radius: 4px;
   box-shadow: 0 1px 3px rgb(0 0 0 / 2%), 0 4px 8px rgb(0 0 0 / 2%);
   background-color: #FFF;
   font-size: 0;
   overflow: hidden;
+  margin: 0 10px;
   & + & {
     margin-top: 10px;
   }
