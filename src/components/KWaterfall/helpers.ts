@@ -1,3 +1,5 @@
+import { VNode } from "vue/types/umd";
+
 /** waterfall direction */
 export enum ENUM_DIRECTION {
   horizontal = 'horizontal',
@@ -98,14 +100,36 @@ export function layoutEls(els: HTMLElement[], targets: HTMLElement[], bases?: nu
   if(!els?.length || !targets?.length) {
     return;
   }
-  console.log('...layout', els.length, targets.length)
+  console.log('...layout', els.length, targets.length);
+  console.time('layout costs');
+  const notInsertedEls = els.filter(t => !document.contains(t));
+  notInsertedEls.length && targets[0].appendChild(attachElsToFragment(notInsertedEls));
   const measurements = measureEls(els);
-  const measureBases = bases || (attachElsToFragment(els) && measureEls(targets));
+  const targetBases = bases || (attachElsToFragment(els) && measureEls(targets));
   const groups = els.reduce((all, cur, idx) => {
-    const smallestIdx = findSmallestIdx(measureBases);
-    measureBases[smallestIdx] += measurements[idx];
+    const smallestIdx = findSmallestIdx(targetBases);
+    targetBases[smallestIdx] += measurements[idx];
     all[smallestIdx].push(cur);
     return all;
   }, getArray(targets.length, () => [] as HTMLElement[]));
   groups.forEach((t, idx) => targets[idx].appendChild(attachElsToFragment(t)));
+  console.timeEnd('layout costs');
+}
+
+/** diff children to find the part which will be re-layout */
+export function diffChildren(children: VNode[] = [], prevChildren: VNode[] = []): VNode[] {
+  let splitIdx = 0;
+  const length = children.length;
+  children.some((t, i) => {
+    const prevChild = prevChildren[i];
+    if(!prevChild || t.key !== prevChild.key) {
+      splitIdx = i;
+      return true;
+    } else if(i === length - 1 && t.key === prevChild.key) {
+      splitIdx = length;
+      return true;
+    }
+    return false;
+  });
+  return children.slice(splitIdx, length);
 }

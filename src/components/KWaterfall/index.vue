@@ -1,6 +1,6 @@
 <script lang="ts">
-import Vue, { PropType, VNode } from 'vue';
-import { getArray, layoutEls } from './helpers';
+import Vue, { PropType, VNode, VNodeComponentOptions } from 'vue';
+import { diffChildren, getArray, layoutEls } from './helpers';
 
 const compName = 'k-waterfall';
 const laneClass = `${compName}__lane`;
@@ -10,53 +10,45 @@ export default Vue.extend({
   name: compName,
   inheritAttrs: false,
   props: {
-    list: {
-      type: Array as PropType<unknown[]>,
-      required: true,
-      default: () => []
-    },
     cols: {
       type: Number,
       required: false,
       default: 2
+    }
+  },
+  mounted() {
+    this.layout();
+  },
+  updated() {
+    const toLayoutItems = diffChildren(this.children, this.prevChildren).map(t => t.elm);
+    toLayoutItems.length && this.layout(toLayoutItems);
+  },
+  methods: {
+    getLanes(): HTMLElement[] {
+      return this.$refs[laneClass] || [];
     },
-    transitionProps: {
-      type: Object,
-      required: false,
-      default: () => ({})
+    getItems(): HTMLElement[] {
+      return (this.children || []).map(t => t.elm);
+    },
+    layout(items?: HTMLElement[]) {
+      const lanes = this.getLanes();
+      layoutEls(items || this.getItems(), lanes, getArray(lanes.length, 0));
     }
   },
   render(h): VNode {
-    const { $scopedSlots, list, cols, transitionProps } = this;
-    const layoutItems: HTMLElement[] = [];
-    let toProcessCount = 0;
-    const laneCommonProps = { class: laneClass, ref: laneClass, refInFor: true };
-
-    const getLanes = (): HTMLElement[] => (this.$refs[laneClass] || []).map(t => t.$el || t);
-
-    const holderLane = h(
-      'transition-group',
-      {
-        key: 'holderLane',
-        ...laneCommonProps,
-        props: { css: false, appear: true, tag: laneNodeType, ...transitionProps },
-        on: {
-          // record elements to be layout
-          beforeEnter: () => toProcessCount++,
-          // batch layout in the end
-          enter: (el) => {
-            layoutItems.push(el);
-            layoutItems.length === toProcessCount && layoutEls(layoutItems, getLanes())
-          }
-        }
-    }, list.map((item, index) =>  $scopedSlots.default({item, index})));
+    const { $scopedSlots, cols } = this;
+    this.prevChildren = this.children;
+    this.children = ($scopedSlots.default?.() || [])
+      .filter(t => t.tag && t.key && String(t.key).indexOf('__vlist') !== 0);
 
     return h(
       'div',
-      // let the 'cols' be the default key,
-      // so that all items will be regenerated when 'cols' changes
-      { class: compName, key: cols },
-      [holderLane, ...getArray(cols - 1, idx => h(laneNodeType, { key: idx, ...laneCommonProps }))]
+      { class: compName },
+      getArray(cols, idx => h(
+        'div',
+        { class: laneClass, ref: laneClass, refInFor: true },
+        idx === 0 ? this.children : null
+      ))
     );
   }
 });
