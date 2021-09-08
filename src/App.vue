@@ -17,13 +17,14 @@
       <br />
       <button @click="reload">reload</button>
       <button @click="loadMore">load more</button>
-      <button @click="reverseComp">toggle render component</button>
       <button @click="shuffle">shuffle</button>
+      <button @click="layout">layout</button>
+      <button @click="reverseComp">toggle render component</button>
     </div>
     <div class="content">
-      <KWaterfall :cols="cols">
-          <component v-for="item in list" :is="items[0]" :key="item.key" :item="item" />
-        </KWaterfall>
+      <KWaterfall ref="waterfall" :cols="cols">
+        <component v-for="item in list" :is="items[0]" :key="item.key" :item="item" :extra="size" />
+      </KWaterfall>
     </div>
   </div>
 </template>
@@ -115,6 +116,9 @@ export default Vue.extend({
     },
     shuffle() {
       this.list.reverse();
+    },
+    layout() {
+      this.$refs.waterfall.layout(true);
     }
   }
 });

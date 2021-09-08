@@ -100,8 +100,6 @@ export function layoutEls(els: HTMLElement[], targets: HTMLElement[], bases?: nu
   if(!els?.length || !targets?.length) {
     return;
   }
-  console.log('...layout', els.length, targets.length);
-  console.time('layout costs');
   const notInsertedEls = els.filter(t => !document.contains(t));
   notInsertedEls.length && targets[0].appendChild(attachElsToFragment(notInsertedEls));
   const measurements = measureEls(els);
@@ -113,7 +111,6 @@ export function layoutEls(els: HTMLElement[], targets: HTMLElement[], bases?: nu
     return all;
   }, getArray(targets.length, () => [] as HTMLElement[]));
   groups.forEach((t, idx) => targets[idx].appendChild(attachElsToFragment(t)));
-  console.timeEnd('layout costs');
 }
 
 /** diff children to find the part which will be re-layout */
@@ -122,10 +119,10 @@ export function diffChildren(children: VNode[] = [], prevChildren: VNode[] = [])
   const length = children.length;
   children.some((t, i) => {
     const prevChild = prevChildren[i];
-    if(!prevChild || t.key !== prevChild.key) {
+    if(!prevChild || t.elm !== prevChild.elm) {
       splitIdx = i;
       return true;
-    } else if(i === length - 1 && t.key === prevChild.key) {
+    } else if(i === length - 1 && t.elm === prevChild.elm) {
       splitIdx = length;
       return true;
     }

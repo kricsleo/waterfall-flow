@@ -4,7 +4,7 @@
       <img class="item-footer__avatar" :src="item.avatar" />
       <p class="item-footer__username">{{item.username}}</p>
     </div>
-    <p class="item-footer__title">{{ item.title }}</p>
+    <p class="item-footer__title">{{ item.title }}{{extra}}</p>
   </div>
 </template>
 
@@ -18,7 +18,8 @@ export default Vue.extend({
       type: Object as PropType<IItemData>,
       required: true,
       default: () => ({})
-    }
+    },
+    extra: String
   },
   beforeCreate() {
     console.log("beforeCreate");

@@ -1,10 +1,9 @@
 <script lang="ts">
-import Vue, { PropType, VNode, VNodeComponentOptions } from 'vue';
+import Vue, { VNode } from 'vue';
 import { diffChildren, getArray, layoutEls } from './helpers';
 
 const compName = 'k-waterfall';
 const laneClass = `${compName}__lane`;
-const laneNodeType = 'div';
 
 export default Vue.extend({
   name: compName,
@@ -16,23 +15,28 @@ export default Vue.extend({
       default: 2
     }
   },
+  watch: {
+    cols() {
+      this.isColsChanged = true;
+    }
+  },
   mounted() {
-    this.layout();
+    this.layout(true);
   },
   updated() {
-    const toLayoutItems = diffChildren(this.children, this.prevChildren).map(t => t.elm);
-    toLayoutItems.length && this.layout(toLayoutItems);
+    this.layout(this.isColsChanged);
+    this.isColsChanged = false;
   },
   methods: {
     getLanes(): HTMLElement[] {
       return this.$refs[laneClass] || [];
     },
-    getItems(): HTMLElement[] {
-      return (this.children || []).map(t => t.elm);
-    },
-    layout(items?: HTMLElement[]) {
+    layout(force = false) {
+      const els = (force ? this.children : diffChildren(this.children, this.prevChildren))
+        .map(t => t.elm as HTMLElement);
       const lanes = this.getLanes();
-      layoutEls(items || this.getItems(), lanes, getArray(lanes.length, 0));
+      const isLayoutAll = els.length === this.children.length;
+      layoutEls(els, lanes, isLayoutAll ? getArray(lanes.length, 0) : null);
     }
   },
   render(h): VNode {
