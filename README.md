@@ -22,8 +22,15 @@ import '@kricsleo/k-waterfall/dist/kWaterfall.css';
 ```
 
 ```vue
-<k-waterfall cols="2">
-  <your-componenet v-for="item in list" :key="item.key">{{item}}</your-componenet>
+<k-waterfall :cols="2">
+  <your-comp v-for="item in list" :key="item.key" />
+</k-waterfall>
+
+<k-waterfall :cols="2">
+  <comp-a />
+  <comp-b />
+  <comp-c />
+  ...
 </k-waterfall>
 ```
 
