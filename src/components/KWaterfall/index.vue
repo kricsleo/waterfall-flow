@@ -15,35 +15,32 @@ export default Vue.extend({
       default: 2
     }
   },
-  watch: {
-    cols() {
-      this.isColsChanged = true;
-    }
-  },
   mounted() {
-    this.layout(true);
+    this.layout();
   },
   updated() {
-    this.layout(this.isColsChanged);
-    this.isColsChanged = false;
+    this.layout();
   },
   methods: {
     getLanes(): HTMLElement[] {
       return this.$refs[laneClass] || [];
     },
     layout(force = false) {
-      const els = (force ? this.children : diffChildren(this.children, this.prevChildren))
+      console.time('layout costs:');
+      const els = (force || this.isColsChanged ? this.children : diffChildren(this.children, this.prevChildren))
         .map(t => t.elm as HTMLElement);
       const lanes = this.getLanes();
       const isLayoutAll = els.length === this.children.length;
       layoutEls(els, lanes, isLayoutAll ? getArray(lanes.length, 0) : null);
+      console.timeEnd('layout costs:');
     }
   },
   render(h): VNode {
     const { $scopedSlots, cols } = this;
     this.prevChildren = this.children;
-    this.children = ($scopedSlots.default?.() || [])
-      .filter(t => t.tag && t.key && String(t.key).indexOf('__vlist') !== 0);
+    this.children = $scopedSlots.default?.() || [];
+    this.isColsChanged = this.prevCols !== cols;
+    this.prevCols = cols;
 
     return h(
       'div',

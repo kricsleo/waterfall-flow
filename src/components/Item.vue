@@ -30,30 +30,30 @@ export default Vue.extend({
       return imgWidth && imgHeight ? imgHeight / imgWidth : 0;
     }
   },
-  beforeCreate() {
-    console.log("beforeCreate");
-  },
-  created() {
-    this.limitLog("created");
-  },
-  beforeMount() {
-    this.limitLog("beforeMount");
-  },
-  mounted() {
-    this.limitLog("mounted");
-  },
-  beforeUpdate() {
-    this.limitLog("beforeUpdate");
-  },
-  updated() {
-    this.limitLog("updated");
-  },
-  beforeDestroy() {
-    this.limitLog("beforeDestroy");
-  },
-  destroyed() {
-    this.limitLog("destroyed");
-  },
+  // beforeCreate() {
+  //   console.log("beforeCreate");
+  // },
+  // created() {
+  //   this.limitLog("created");
+  // },
+  // beforeMount() {
+  //   this.limitLog("beforeMount");
+  // },
+  // mounted() {
+  //   this.limitLog("mounted");
+  // },
+  // beforeUpdate() {
+  //   this.limitLog("beforeUpdate");
+  // },
+  // updated() {
+  //   this.limitLog("updated");
+  // },
+  // beforeDestroy() {
+  //   this.limitLog("beforeDestroy");
+  // },
+  // destroyed() {
+  //   this.limitLog("destroyed");
+  // },
   methods: {
     limitLog(msg: string) {
       console.count(msg);

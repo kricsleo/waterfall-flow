@@ -91,7 +91,7 @@ export function measureEls(Els: HTMLElement[], direction?: ENUM_DIRECTION): numb
 export function measureEls(Els: HTMLElement, direction?: ENUM_DIRECTION): number;
 export function measureEls(els: HTMLElement | HTMLElement[], direction = ENUM_DIRECTION.vertical): number | number[] {
   const measure = (el: HTMLElement): number =>
-    el ? el.getBoundingClientRect()[direction === ENUM_DIRECTION.vertical ? 'height' : 'width'] || 0: 0;
+    el?.getBoundingClientRect?.()[direction === ENUM_DIRECTION.vertical ? 'height' : 'width'] || 0;
   return checkType(els, 'Array') ? els.map(t => measure(t)) : measure(els);
 }
 
@@ -100,7 +100,7 @@ export function layoutEls(els: HTMLElement[], targets: HTMLElement[], bases?: nu
   if(!els?.length || !targets?.length) {
     return;
   }
-  const notInsertedEls = els.filter(t => !document.contains(t));
+  const notInsertedEls = els.filter(t => !document.body.contains(t));
   notInsertedEls.length && targets[0].appendChild(attachElsToFragment(notInsertedEls));
   const measurements = measureEls(els);
   const targetBases = bases || (attachElsToFragment(els) && measureEls(targets));
@@ -113,20 +113,29 @@ export function layoutEls(els: HTMLElement[], targets: HTMLElement[], bases?: nu
   groups.forEach((t, idx) => targets[idx].appendChild(attachElsToFragment(t)));
 }
 
-/** diff children to find the part which will be re-layout */
+/** diff children to find the part which will be re-layout, using conservative strategy */
 export function diffChildren(children: VNode[] = [], prevChildren: VNode[] = []): VNode[] {
-  let splitIdx = 0;
-  const length = children.length;
-  children.some((t, i) => {
-    const prevChild = prevChildren[i];
-    if(!prevChild || t.elm !== prevChild.elm) {
-      splitIdx = i;
-      return true;
-    } else if(i === length - 1 && t.elm === prevChild.elm) {
-      splitIdx = length;
-      return true;
-    }
-    return false;
-  });
-  return children.slice(splitIdx, length);
+  const prevLength = prevChildren.length;
+  if(!prevLength || prevLength > children.length) {
+    return children;
+  }
+  let startIdx = 0;
+  while (prevChildren[startIdx] && prevChildren[startIdx].elm === children[startIdx].elm) {
+    startIdx += 1;
+  }
+  return startIdx === prevLength ? children.slice(startIdx) : children;
+  // let splitIdx = 0;
+  // const length = children.length;
+  // children.some((t, i) => {
+  //   const prevChild = prevChildren[i];
+  //   if(!prevChild || t.elm !== prevChild.elm) {
+  //     splitIdx = i;
+  //     return true;
+  //   } else if(i === length - 1 && t.elm === prevChild.elm) {
+  //     splitIdx = length;
+  //     return true;
+  //   }
+  //   return false;
+  // });
+  // return children.slice(splitIdx, length);
 }

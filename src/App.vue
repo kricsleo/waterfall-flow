@@ -2,28 +2,30 @@
   <div id="app">
     <div class="opt">
       cols:
-      <input type="range" placeholder="cols" :min="1" :max="8" :value="cols" @input="cols = Number($event.target.value)" /> {{cols}}
+      <input type="range" :min="1" :max="10" v-model="cols" /> {{cols}}
       <br />
       page size:
-      <input type="range" placeholder="cols" :min="1" :max="10" :value="size" @input="size = Number($event.target.value)" /> {{size}}
+      <input type="range" :min="1" :max="10" v-model="size" /> {{size}}
+      <br />
+      component type:
+      <input type="radio" id="sync" name="compType" :checked="comps[0] === 'SyncItem'" @change="reverseComp" /> <label for="none">sync</label>&nbsp;
+      <input type="radio" id="async" name="compType" :checked="comps[0] === 'AsyncItem'" @change="reverseComp" /> <label for="flow">async</label>&nbsp;
       <br />
       waitting mode:
-      <input type="checkbox" :checked="asyncMode === 'none'" @input="asyncMode = 'none'" /> none
-      <input type="checkbox" :checked="asyncMode === 'batch'" @input="asyncMode = 'batch'" /> batch
-      <input type="checkbox" :checked="asyncMode === 'oneByOne'" @input="asyncMode = 'oneByOne'" /> one by one
-      <br />
-      hook:
-      <input type="checkbox" :checked="usingHook" @input="usingHook = $event.target.checked" />
+      <input type="radio" id="none" name="asyncMode" :checked="asyncMode === 'none'" @change="asyncMode = 'none'" /> <label for="none">none</label>&nbsp;
+      <input type="radio" id="flow" name="asyncMode" :checked="asyncMode === 'flow'" @change="asyncMode = 'flow'" /> <label for="flow">flow</label>&nbsp;
+      <input type="radio" id="batch" name="asyncMode" :checked="asyncMode === 'batch'" @change="asyncMode = 'batch'" /> <label for="batch">batch</label>
       <br />
       <button @click="reload">reload</button>
       <button @click="loadMore">load more</button>
-      <button @click="shuffle">shuffle</button>
+      <button @click="reverse">reverse</button>
       <button @click="layout">layout</button>
-      <button @click="reverseComp">toggle render component</button>
     </div>
     <div class="content">
-      <KWaterfall ref="waterfall" :cols="cols">
-        <component v-for="item in list" :is="items[0]" :key="item.key" :item="item" :extra="size" />
+      <KWaterfall class="waterfall" ref="waterfall" :cols="Number(cols)">
+        <transition name="waterfall-item" appear v-for="item in list" :key="item.key">
+          <component class="waterfall-item" :is="comps[0]" :item="item" :key="item.key" />
+        </transition>
       </KWaterfall>
     </div>
   </div>
@@ -32,25 +34,24 @@
 <script lang="ts">
 import Vue from "vue";
 import KWaterfall from "./components/KWaterfall/index.vue";
-import ItemPure from "./components/Item.vue";
-import ItemFooter from "./components/ItemFooter.vue";
+import AsyncItem from "./components/Item.vue";
+import SyncItem from "./components/ItemFooter.vue";
 import { loadItems } from "./utils/mock";
 import { loadImg } from "./utils";
 
 export default Vue.extend({
   components: {
     KWaterfall,
-    ItemPure,
-    ItemFooter
+    AsyncItem,
+    SyncItem
   },
   data() {
     return {
-      items: ['ItemFooter', 'ItemPure'],
       list: [],
       cols: 4,
       size: 10,
       asyncMode: 'none',
-      usingHook: false
+      comps: ['SyncItem', 'AsyncItem']
     };
   },
   mounted() {
@@ -58,13 +59,13 @@ export default Vue.extend({
   },
   methods: {
     async reload() {
-      const list = await loadItems(this.size);
-      this.list = this.prefixTitleForDebug(list);
+      this.list = [];
+      this.loadMore();
     },
     loadMore() {
       switch(this.asyncMode) {
         case 'none': return this.loadMoreSync();
-        case 'oneByOne': return this.loadMoreAsyncOneByOne();
+        case 'flow': return this.loadMoreAsyncFlow();
         case 'batch': return this.loadMoreAsyncBatch();
         default: return;
       }
@@ -75,7 +76,7 @@ export default Vue.extend({
       this.list = this.prefixTitleForDebug([...this.list, ...newItems]);
     },
     // 逐个等待图片加载拿到宽度来使得组件再mount时即为最终布局
-    async loadMoreAsyncOneByOne() {
+    async loadMoreAsyncFlow() {
       let newItems = await loadItems(this.size);
       const waitPrevs = (i, cb) => {
         if(newItems.slice(0, i - 1).some(t => t.imgWidth === undefined)) {
@@ -112,9 +113,9 @@ export default Vue.extend({
       }));
     },
     reverseComp() {
-      this.items.reverse();
+      this.comps.reverse();
     },
-    shuffle() {
+    reverse() {
       this.list.reverse();
     },
     layout() {
@@ -144,7 +145,16 @@ body {
     }
   }
 }
-.item-move {
-  transition: all 300ms ease-in-out;
+.waterfall-item {
+  &-enter-active {
+    transition: all 300ms ease-out;
+  }
+  &-enter {
+    opacity: 0.3;
+    transform: translateY(10px);
+  }
+  &-leave-active {
+    display: none;
+  }
 }
 </style>
