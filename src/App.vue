@@ -22,18 +22,18 @@
       <button @click="layout">layout</button>
     </div>
     <div class="content">
-      <KWaterfall class="waterfall" ref="waterfall" :cols="Number(cols)">
+      <waterfall-flow class="waterfall" ref="waterfall" :cols="Number(cols)">
         <transition name="waterfall-item" appear v-for="item in list" :key="item.key">
           <component class="waterfall-item" :is="comps[0]" :item="item" :key="item.key" />
         </transition>
-      </KWaterfall>
+      </waterfall-flow>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-import KWaterfall from "./components/KWaterfall/index.vue";
+import WaterfallFlow from "./components/WaterfallFlow/index.vue";
 import AsyncItem from "./components/Item.vue";
 import SyncItem from "./components/ItemFooter.vue";
 import { loadItems } from "./utils/mock";
@@ -41,7 +41,7 @@ import { loadImg } from "./utils";
 
 export default Vue.extend({
   components: {
-    KWaterfall,
+    WaterfallFlow,
     AsyncItem,
     SyncItem
   },

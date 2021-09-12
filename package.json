@@ -1,21 +1,21 @@
 {
-  "name": "@kricsleo/k-waterfall",
+  "name": "@kricsleo/waterfall-flow",
   "version": "1.0.0",
   "description": "a waterfall component for vue",
   "keyword": "waterfall vue",
   "private": false,
-  "main": "dist/kWaterfall.umd.min.js",
+  "main": "dist/WaterfallFlow.umd.min.js",
   "files": [
     "dist/**/*"
   ],
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build --target lib --name kWaterfall --dest dist src/components/KWaterfall/index.ts",
+    "build": "vue-cli-service build --target lib --name WaterfallFlow --dest dist src/components/WaterfallFlow/index.ts",
     "lint": "vue-cli-service lint"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:kricsleo/k-waterfall.git"
+    "url": "git@github.com:kricsleo/waterfall-flow.git"
   },
   "author": "kricsleo",
   "license": "MIT",

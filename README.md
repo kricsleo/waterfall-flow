@@ -1,4 +1,4 @@
-# k-waterfall
+# waterfall-flow
 
 `vue`瀑布流组件，支持不定高及未知高度元素的自动排布。
 
@@ -11,27 +11,27 @@
 ## usage
 
 ```bash
-# npm install @kricsleo/k-waterfall
-yarn add @kricsleo/k-waterfall
+# npm install @kricsleo/waterfall-flow
+yarn add @kricsleo/waterfall-flow
 ```
 
 ```typescript
 // style goes here, I provide the minium style (very few) to make it work,
 // you are likely to DIY the style yourself.
-import '@kricsleo/k-waterfall/dist/kWaterfall.css';
+import '@kricsleo/waterfall-flow/dist/WaterfallFlow.css';
 ```
 
 ```vue
-<k-waterfall :cols="2">
+<waterfall-flow :cols="2">
   <your-comp v-for="item in list" :key="item.key" />
-</k-waterfall>
+</waterfall-flow>
 
-<k-waterfall :cols="2">
+<waterfall-flow :cols="2">
   <comp-a />
   <comp-b />
   <comp-c />
   ...
-</k-waterfall>
+</waterfall-flow>
 ```
 
 ## api

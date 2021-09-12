@@ -1,4 +1,4 @@
-import { getArray } from "@/components/KWaterfall/helpers";
+import { getArray } from "@/components/WaterfallFlow/helpers";
 import { wait } from "./index";
 
 export interface IItemData {
