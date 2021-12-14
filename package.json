@@ -1,6 +1,6 @@
 {
   "name": "@kricsleo/waterfall-flow",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "a waterfall component for vue",
   "keyword": "waterfall vue",
   "private": false,
