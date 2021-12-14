@@ -35,11 +35,11 @@ export default Vue.extend({
     layout(force?: boolean) {
       const { isColsChanged, deviation, children, prevChildren, log } = this;
       log && console.time('layout costs:');
-      this.checkContainer();
       const els = (force || isColsChanged ? children : diffChildren(children, prevChildren))
         .map(t => t.elm as HTMLElement);
       const lanes = this.getLanes();
       const isLayoutAll = els.length === children.length;
+      els.length && this.checkContainer();
       layoutEls(els, lanes, { bases: isLayoutAll ? getArray(lanes.length, 0) : null, deviation });
       log && console.timeEnd('layout costs:');
     },
