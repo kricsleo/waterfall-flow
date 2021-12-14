@@ -1,9 +1,9 @@
 <script lang="ts">
 import Vue, { VNode } from 'vue';
-import { diffChildren, getArray, layoutEls } from './helpers';
+import { diffChildren, ENUM_DIRECTION, getArray, layoutEls, measureEls, MIN_MEASUREMENT } from './helpers';
 
 const compName = 'waterfall-flow';
-const laneClass = `${compName}__lane`;
+const compLaneClass = `${compName}__lane`;
 
 export default Vue.extend({
   name: compName,
@@ -13,6 +13,13 @@ export default Vue.extend({
       type: Number,
       required: false,
       default: 2
+    },
+    log: Boolean,
+    laneClass: String,
+    deviation: {
+      type: Number,
+      required: false,
+      default: 0.4
     }
   },
   mounted() {
@@ -23,16 +30,27 @@ export default Vue.extend({
   },
   methods: {
     getLanes(): HTMLElement[] {
-      return this.$refs[laneClass] || [];
+      return this.$refs[compLaneClass] || [];
     },
-    layout(force = false) {
-      console.time('layout costs:');
-      const els = (force || this.isColsChanged ? this.children : diffChildren(this.children, this.prevChildren))
+    layout(force?: boolean) {
+      const { isColsChanged, deviation, children, prevChildren, log } = this;
+      log && console.time('layout costs:');
+      this.checkContainer();
+      const els = (force || isColsChanged ? children : diffChildren(children, prevChildren))
         .map(t => t.elm as HTMLElement);
       const lanes = this.getLanes();
-      const isLayoutAll = els.length === this.children.length;
-      layoutEls(els, lanes, isLayoutAll ? getArray(lanes.length, 0) : null);
-      console.timeEnd('layout costs:');
+      const isLayoutAll = els.length === children.length;
+      layoutEls(els, lanes, { bases: isLayoutAll ? getArray(lanes.length, 0) : null, deviation });
+      log && console.timeEnd('layout costs:');
+    },
+    checkContainer() {
+      const measurement = measureEls(this.$refs[compName] as HTMLElement, ENUM_DIRECTION.horizontal);
+      if(measurement > MIN_MEASUREMENT) {
+        return true;
+      } else {
+        console.error(`[${compName}]: Container's width can't be '0' due to 'display:none' or other reason, please check your layout! And Fallback layout is used.`);
+        return false;
+      }
     }
   },
   render(h): VNode {
@@ -44,10 +62,10 @@ export default Vue.extend({
 
     return h(
       'div',
-      { class: compName },
+      { class: compName, ref: compName },
       getArray(cols, idx => h(
         'div',
-        { class: laneClass, ref: laneClass, refInFor: true },
+        { class: [compLaneClass, this.laneClass], ref: compLaneClass, refInFor: true },
         idx === 0 ? this.children : null
       ))
     );

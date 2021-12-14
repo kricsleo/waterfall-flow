@@ -86,17 +86,24 @@ export function findSmallestIdx(arr: number[]): number {
   return idx;
 }
 
+/** guess why use 75 ? :) hints: ASCII*/
+export const MIN_MEASUREMENT = 75E-10;
+
 /** measure element(s) */
 export function measureEls(Els: HTMLElement[], direction?: ENUM_DIRECTION): number[];
 export function measureEls(Els: HTMLElement, direction?: ENUM_DIRECTION): number;
 export function measureEls(els: HTMLElement | HTMLElement[], direction = ENUM_DIRECTION.vertical): number | number[] {
   const measure = (el: HTMLElement): number =>
-    el?.getBoundingClientRect?.()[direction === ENUM_DIRECTION.vertical ? 'height' : 'width'] || 0;
+    el?.getBoundingClientRect?.()[direction === ENUM_DIRECTION.vertical ? 'height' : 'width'] || MIN_MEASUREMENT;
   return checkType(els, 'Array') ? els.map(t => measure(t)) : measure(els);
 }
 
 /** layout elements */
-export function layoutEls(els: HTMLElement[], targets: HTMLElement[], bases?: number[]): void {
+export function layoutEls(
+  els: HTMLElement[],
+  targets: HTMLElement[],
+  { bases, deviation }: { bases?: number[]; deviation?: number } = {}
+): void {
   if(!els?.length || !targets?.length) {
     return;
   }
@@ -105,9 +112,16 @@ export function layoutEls(els: HTMLElement[], targets: HTMLElement[], bases?: nu
   const measurements = measureEls(els);
   const targetBases = bases || (attachElsToFragment(els) && measureEls(targets));
   const groups = els.reduce((all, cur, idx) => {
-    const smallestIdx = findSmallestIdx(targetBases);
-    targetBases[smallestIdx] += measurements[idx];
-    all[smallestIdx].push(cur);
+    const isLast = idx === els.length - 1;
+    let insertIdx = findSmallestIdx(targetBases)
+    // small deviation are allowed between lanes, so the visual layout would be more in line with human intuition.
+    if(isLast && deviation) {
+      const deviationBases = targetBases.map((t, i) => i === insertIdx ? t : t - deviation);
+      const secondSmallestIdx = findSmallestIdx(deviationBases);
+      secondSmallestIdx < insertIdx && (insertIdx = secondSmallestIdx);
+    }
+    targetBases[insertIdx] += measurements[idx];
+    all[insertIdx].push(cur);
     return all;
   }, getArray(targets.length, () => [] as HTMLElement[]));
   groups.forEach((t, idx) => targets[idx].appendChild(attachElsToFragment(t)));
@@ -124,18 +138,4 @@ export function diffChildren(children: VNode[] = [], prevChildren: VNode[] = [])
     startIdx += 1;
   }
   return startIdx === prevLength ? children.slice(startIdx) : children;
-  // let splitIdx = 0;
-  // const length = children.length;
-  // children.some((t, i) => {
-  //   const prevChild = prevChildren[i];
-  //   if(!prevChild || t.elm !== prevChild.elm) {
-  //     splitIdx = i;
-  //     return true;
-  //   } else if(i === length - 1 && t.elm === prevChild.elm) {
-  //     splitIdx = length;
-  //     return true;
-  //   }
-  //   return false;
-  // });
-  // return children.slice(splitIdx, length);
 }
