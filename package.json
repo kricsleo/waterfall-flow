@@ -1,7 +1,7 @@
 {
   "name": "@kricsleo/waterfall-flow",
   "version": "1.0.2",
-  "description": "a waterfall component for vue",
+  "description": "A waterfall component for vue",
   "keyword": "waterfall vue",
   "private": false,
   "main": "dist/WaterfallFlow.umd.min.js",
@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build --target lib --name WaterfallFlow --dest dist src/components/WaterfallFlow/index.ts",
+    "build": "vue-cli-service build --target lib --name WaterfallFlow --dest dist src/WaterfallFlow/index.ts",
     "lint": "vue-cli-service lint"
   },
   "repository": {
