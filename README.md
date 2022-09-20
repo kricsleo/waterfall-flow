@@ -12,7 +12,7 @@
 - Support dynamic and unlimited columns
 - Support different kinds of children within the same waterfall
 - Auto layout without specifying width or height of children
-- Using natural document flow which is more reliable than `absolute` layout
+- Using natural document flow which is more reliable than the most common `absolute` layout
 
 ## Getting Started
 
@@ -49,9 +49,9 @@ import '@kricsleo/waterfall-flow/dist/WaterfallFlow.css';
 | Option    | Type   | Required | Default | Description                 |
 |-----------|--------|----------|---------|-----------------------------|
 | cols      | number | false    | 2       | Number of columns.          |
-| diviation | number | false    | 1       | Diviation of pixel.         |
+| deviation | number | false    | 1       | Deviation in pixel.         |
 | laneClass | string | false    | -       | Class name for each column. |
 
 ## Escape Pod
 
-In case you want to layout all items yourself, you can call `layout(true)` by waterfall-flow instance, like `this.$refs.waterfall.layout(true)`, then all items will be re-layout.
+In case you want to rearrange all items yourself, you can call `layout(true)` by the waterfall-flow instance, like `this.$refs.waterfall.layout(true)`, then all items will be re-layout.
