@@ -1,9 +1,13 @@
-## Preview
-
-[![](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/vue2-vue-cli-dcukzb)
+# Waterfall component for Vue 2
 
 <p align="center">
-  <img src="screenshot/waterfall-flow-demo.gif" />
+  <a href="https://stackblitz.com/edit/vue2-vue-cli-dcukzb" target="_blank">
+    <img src="https://developer.stackblitz.com/img/open_in_stackblitz.svg" />
+  </a>
+</p>
+
+<p align="center">
+  <img src="screenshot/preview.gif" />
 </p>
 
 ## Features
@@ -30,7 +34,7 @@ yarn add @kricsleo/waterfall-flow
 import '@kricsleo/waterfall-flow/dist/WaterfallFlow.css';
 ```
 
-### Use
+### Usage
 ```vue
 <waterfall-flow>
   <your-comp v-for="item in list" :key="item.key" />
@@ -44,7 +48,7 @@ import '@kricsleo/waterfall-flow/dist/WaterfallFlow.css';
 </waterfall-flow>
 ```
 
-## Apis
+## API
 
 | Option    | Type   | Required | Default | Description                 |
 |-----------|--------|----------|---------|-----------------------------|
