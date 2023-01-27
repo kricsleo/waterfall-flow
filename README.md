@@ -1,7 +1,7 @@
 # Waterfall component for Vue 2
 
 <p align="center">
-  <a href="https://stackblitz.com/edit/vue2-vue-cli-dcukzb" target="_blank">
+  <a href="https://stackblitz.com/edit/vue2-vue-cli-dcukzb?file=components%2FPhotoList.vue" target="_blank">
     <img src="https://developer.stackblitz.com/img/open_in_stackblitz.svg" />
   </a>
 </p>
