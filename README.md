@@ -1,4 +1,4 @@
-# Waterfall component for Vue 2
+<h1 align="center">Waterfall component for Vue 2</h1>
 
 <p align="center">
   <a href="https://stackblitz.com/edit/vue2-vue-cli-dcukzb?file=components%2FPhotoList.vue" target="_blank">
