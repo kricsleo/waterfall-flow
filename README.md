@@ -15,7 +15,7 @@
 - Support Vue 2
 - Support dynamic and unlimited columns
 - Support different kinds of children within the same waterfall
-- Auto layout without specifying width or height of children
+- Auto layout **without specifying width or height** of children
 - Using natural document flow which is more reliable than the most common `absolute` layout
 
 ## Getting Started
