@@ -50,11 +50,11 @@ import '@kricsleo/waterfall-flow/dist/WaterfallFlow.css';
 
 ## API
 
-| Option    | Type   | Required | Default | Description                 |
+| Prop    | Type   | Required | Default | Description                 |
 |-----------|--------|----------|---------|-----------------------------|
-| cols      | number | false    | 2       | Number of columns.          |
-| deviation | number | false    | 1       | Deviation in pixel.         |
-| laneClass | string | false    | -       | Class name for each column. |
+| cols      | number | ❌    | 2       | Number of columns.          |
+| deviation | number | ❌    | 1       | Deviation of columns in pixel.         |
+| laneClass | string | ❌    | -       | Class name for each column. |
 
 ## Escape Pod
 
